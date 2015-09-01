@@ -1,0 +1,30 @@
+Folder Structure:
+
+Project Root
+|
+ -- .issues
+   |
+    -- <id>
+   |   |
+   |   | issue.json {:id, :created_at, :title, :description, :creator}
+   |   |
+   |    -- status
+   |   |   |
+   |   |   | YYYYMMDD_HHMMSS.FFF.<status> {:status, :created_at, :creator, :description}
+   |   |    ...
+   |   |
+   |    -- comments
+   |   |   |
+   |   |   | YYYYMMDD_HHMMSS.FFF.json {:comment_id, :created_at, :title, :description, :creator}}
+   |   |    ...
+   |   |
+   |    -- tags
+   |       |
+   |       | <key> {:key, :value, :created_at, :creator}
+   |        ...
+   |
+    -- aliases
+       |
+       | <alias> {:id, :alias}
+
+

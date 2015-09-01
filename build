@@ -1,0 +1,2 @@
+#!/bin/bash
+./deps/ruby_collate ./src/entry_script.rb > git-issue

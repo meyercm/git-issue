@@ -1,0 +1,48 @@
+impl?
+ [x]     git issue new
+        #edit in vi
+
+ [x]     git issue new -m|--message "message"
+ [x]     git issue new -t|--tag priority:high
+ [x]     git issue new feature  # sets tag-> kind:feature
+
+
+ [x]     git issue close <id>
+ [x]     git issue close <id> -m|--message "message"
+ [x]     git issue close <id> -t|--tag deferred:true
+ [x]     git issue close <id> -e|--editor
+
+ [x]     git issue tag <id> kind:feature
+ [x]     git issue tag <id> kind:bug,priority:high
+ [x]     git issue tag <id> worthless_tag -d|--delete
+ [x]     git issue tag -l|--list
+
+ [x]     git issue delete <id>
+
+ [x]     git issue comment <id>                  #edit in vi
+ [x]     git issue comment <id> -m|--message "message"
+ [x]     git issue comment -d|--delete <comment_id>
+
+ [x]     git issue list
+ [x]     git issue list -a|--all                 #shows closed issues too.
+ [x]     git issue list -t|--tag priority:high
+ [x]     git issue list --tag milestone:2.*      #everything for a 2.x milestone
+ [x]     git issue list -f|--find <search_string>
+ [x]     git issue list -n|--not-tag milestone      #everything without a milestone
+ [x]     git issue list feature                  #list issues with kind:feature tag set.
+ [x]     git issue list -p|--pretty with-tags|oneline
+
+ [x]     git issue show <id>
+
+ [x]     git issue edit <id>
+
+ [x]     git issue help
+ [x]     git issue help new
+ [x]     git issue help close
+ [x]     git issue help tag
+ [x]     git issue help delete
+ [x]     git issue help comment
+ [x]     git issue help list
+ [x]     git issue help show
+ [x]     git issue help edit
+
