@@ -1,6 +1,7 @@
 require_relative 'git_issue/all'
 
 module GitIssue
+  @@version = "0.0.2"
   def self.parse_and_run(args)
     result = 1 # pessimistic- assume the script will fail somewhere
     begin
@@ -24,6 +25,8 @@ module GitIssue
     # GitIssue::NewCommand
     if const_defined?(classname) then
       const_get(classname)
+    elsif "#{str}" == "" then
+      raise IssueError.new("git-issue version #{@@version}.  Try 'git issue help'.")
     else
       raise IssueError.new("unknown command #{str}")
     end
