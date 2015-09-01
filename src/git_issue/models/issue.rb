@@ -56,7 +56,9 @@ module GitIssue
         "#{pad_status}  #{short_id}  #{title}#{tag_str}"
       when "oneline"
         short_status = "#{status[0]}".capitalize
-        "#{short_status} #{short_id} #{title}"
+        def_tag = tags[GitWorker.default_tag]
+        kind = (def_tag.nil? ? "  " : def_tag.value)
+        "#{short_status} #{short_id} #{kind}: #{title}"
       when "detail"
         detail_string
       end
