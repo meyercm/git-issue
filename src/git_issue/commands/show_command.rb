@@ -34,7 +34,9 @@ module GitIssue
        "issue.folder" =>
          "Folder to store issue information. Defaults to \".issue\"",
        "issue.default-tag" =>
-         "Default tag for convenience syntax. Defaults to \"kind\""
+         "Default tag for convenience syntax. Defaults to \"kind\"",
+       "issue.list-format" =>
+         "Default format to use with --pretty switch. Defaults to \"withtags\"",
       }.map do |k, desc|
         value = GitWorker.config(k)
         if value.nil? then

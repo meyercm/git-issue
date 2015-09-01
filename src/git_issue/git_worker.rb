@@ -54,6 +54,9 @@ module GitIssue
       res = run("git config --get #{key}", :raise => false)
       (res == "") ? default : res
     end
+    def self.list_format
+      config("issue.list-format", "withtags")
+    end
     def self.issues_branch
       config("issue.branch", "issues")
     end

@@ -6,6 +6,7 @@ module GitIssue
       options = OpenStruct.new()
       options.tags = []
       options.not_tags = []
+      options.formatter = GitWorker.list_format
       parser = OptionParser.new do |opts|
         opts.on("-a", "--all", "also show closed issues") do |message|
           options.all = true
@@ -52,12 +53,8 @@ module GitIssue
       end
 
       issues = issues.sort_by{|i| i.created_at}
-      formatter = options.formatter
-      formatter ||= "withtags"
-
-
-      write_output [Issue.table_header(formatter),
-                    issues.map{|i| i.as_table_row(formatter) }.join("\n")].join("\n")
+      write_output [Issue.table_header(options.formatter),
+                    issues.map{|i| i.as_table_row(options.formatter) }.join("\n")].join("\n")
     end
     @@help_message ="\
 Queries the issue datastore.
