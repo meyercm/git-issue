@@ -1,0 +1,9 @@
+---
+:creator: meyer.cm@gmail.com (Chris Meyer)
+:title: description
+:text: ':description => "specific things to add to the test suite:\n[ ] bash injection
+  attack tests\n[ ] unit tests for individual tests where possible\n[ ] black box
+  tests for more commands\n[ ] merge conflicts"'
+:created_at: 1441138312.534045
+:event_type: :set_tag
+:event_id: 2b3fbdbc57596bfacd88a6e6e5da043a6cce45bf
