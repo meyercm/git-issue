@@ -57,7 +57,7 @@ module GitIssue
         if issues.length == 0 then
           raise IssueError.new "could not find an issue matching issue-id #{sha}"
         elsif issues.length > 1 then
-          raise IssueError.new "multiple issues match #{options.sha}: #{issues.map{|i| i.issue_id}.inspect}"
+          raise IssueError.new "multiple issues match #{sha}: #{issues.map{|i| i.issue_id}.inspect}"
         end
         issues.shift
       end
