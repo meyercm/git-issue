@@ -149,7 +149,7 @@ module GitIssue
 "\
 #{issue_id}
 Title:      #{tags[:title].value}
-Created by: #{tags[:creator].value} at #{tags[:created_at].value}
+Created by: #{tags[:creator].value} at #{Time.at(tags[:created_at].value)}
 Tags:       #{tag_string}
 
 #{tags[:description].value}
