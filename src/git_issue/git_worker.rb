@@ -38,8 +38,11 @@ module GitIssue
     def self.branch_exists?(branch_name)
       run("git branch --list #{branch_name}") != ""
     end
-    def self.create_branch(branch_name)
-      run("git branch #{branch_name}")
+    def self.create_orphan_branch(branch_name)
+      top_level = path_to_top_level
+      run("git checkout --orphan #{branch_name}")
+      run("git rm -rf #{top_level}")
+      commit("initial commit of #{branch_name}", "--allow-empty")
     end
     def self.switch_branch(branch_name)
       run("git checkout #{branch_name}")
@@ -99,8 +102,8 @@ module GitIssue
     def self.add(folder)
       run("git add #{folder}")
     end
-    def self.commit(commit_message)
-      run("git commit -m #{Helper.shellescape(commit_message)}")
+    def self.commit(commit_message, options = "")
+      run("git commit -m #{Helper.shellescape(commit_message)} #{options}")
     end
 
     def self.list_issues
@@ -170,8 +173,7 @@ module GitIssue
         begin
           switch_branch(ib)
         rescue GitError
-          create_branch(ib)
-          switch_branch(ib)
+          create_orphan_branch(ib)
         end
         FileUtils.mkdir_p(issues_folder_path)
         begin
