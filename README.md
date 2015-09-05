@@ -56,22 +56,48 @@ Open    deadbeef  Kill more cows!
      - The naive (and common) solution uses a TODO file or a BUGS file at the root of the project; this works fine for a single developer; but when two developers contribute to the same TODO file, they will eventually need to address conflicts in the file with a manual merge.   Additionally, when used in a project with a complicated branching strategy e.g. [gitflow](http://nvie.com/posts/a-successful-git-branching-model/), the TODO file will require out of the ordinary merges to be available (think of a new TODO item created on a hotfix branch being available on a feature/topic branch).
      - Solutions do exist- however, as mentioned above, there isn't an option that is being currently maintained.
 
-`git-issue` is an extension to git: when the file is located on your path, it can be invoked by typing `git issue <subcommand>`. Note that `git-issue` is very lightly opinionated- it does insist on being invoked inside an existing git repository that has at least one commit.
+The strategy `git-issue` uses to solve these problems: create a new branch (by default: `issues`), and store all information related to issues there.  By using a non-development branch, changes can be made to the issues branch without requiring the complicated (and arbitrary) merges described above.
+
+Issues are represented as files within folders; each issue is composed of multiple files- so that if two developers modify an issue, manual merging will only be required if they modify the same part of the issue- the title, for instance.  An example issue's structure:
+
+```
+./4bf8665f544328ac8d416eb2e002e71961e779db
+├── events
+│   ├── 3f8e1906136f1ca3f8507b0289bb9acfd4e6dbdd.event
+│   ├── 997ea9f5bb4937422386a8974aca52fea8ff77fa.event
+│   ├── bdc1f616ea55aaa9ff554955dfd1a70ecac76f9a.event
+│   └── e5b178e4e7e8001ca9651e9f02fa7a255d5d6588.event
+└── tags
+    ├── assigned_to.tag
+    ├── created_at.tag
+    ├── creator.tag
+    ├── description.tag
+    ├── kind.tag
+    ├── status.tag
+    └── title.tag
+```
+
+Each tag is represented in it's own file as the yaml encoding of a hash: {key: tag_name, value: tag_value}. By storing them in separate files, two independent contributors can modify an issue's tags without a merge conflict, until they attempt to modify the same tag.  Also note that key issue metadata (:title, :description, etc.) is stored as tags, for consistent and simple issue editing.
+
+Issue events provide historical tracking information (without needing to parse the git history). They include comments and the setting of issue properties and tags.  Just as with Tags, Events are also yaml-encoded hashes, with the following keys: [:creator :title :text :created_at :event_type :event_id].
 
 ##Installation and Dependencies
 
 ####Requirements:
  - a *nix-like OS: Linux, BSD, OSX, etc.
  - Ruby >= 1.8.7
- - Git
+ - Git >= ?.?.?
+
 ####Installation:
  1. copy the file `git-issue` to a location of your choice on your computer.
  2. make the file executable.
  3. add the folder to your PATH.
+
 #####One way to get it done:
 ``` bash
 git clone https://github.com/meyercm/git-issue.git
 cp git-issue/git-issue /usr/local/bin
 chmod +x /usr/local/bin/git-issue
 ```
+
 Now the commands should be accessible system-wide, provided that `/usr/local/bin` is already on the PATH.
