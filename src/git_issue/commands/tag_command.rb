@@ -13,7 +13,6 @@ module GitIssue
         end
 
       end
-      warn args.inspect
       parser.parse!(args)
       if options.list then
         # skip sha and tag validation
@@ -28,7 +27,6 @@ module GitIssue
       issue = get_issue(options.sha)
 
       if options.delete then
-        warn options.inspect
         Tag.delete(issue, options.delete)
         write_output "successfully deleted tag(s) '#{options.delete.keys.join(", ")}' from #{issue.short_id}"
       elsif options.list then
