@@ -49,8 +49,11 @@ module GitIssue
     def self.branch_exists?(branch_name)
       run("git branch --list #{branch_name}") != ""
     end
-    def self.create_branch(branch_name)
-      run("git branch #{branch_name}")
+    def self.create_orphan_branch(branch_name)
+      top_level = path_to_top_level
+      run("git checkout --orphan #{branch_name}")
+      run("git rm -rf #{top_level}")
+      commit("initial commit of #{branch_name}", "--allow-empty")
     end
     def self.switch_branch(branch_name)
       run("git checkout #{branch_name}")
@@ -64,6 +67,9 @@ module GitIssue
     def self.config(key, default = nil)
       res = run("git config --get #{key}", :raise => false)
       (res == "") ? default : res
+    end
+    def self.list_format
+      config("issue.list-format", "withtags")
     end
     def self.issues_branch
       config("issue.branch", "issues")
@@ -107,8 +113,8 @@ module GitIssue
     def self.add(folder)
       run("git add #{folder}")
     end
-    def self.commit(commit_message)
-      run("git commit -m #{Helper.shellescape(commit_message)}")
+    def self.commit(commit_message, options = "")
+      run("git commit -m #{Helper.shellescape(commit_message)} #{options}")
     end
 
     def self.list_issues
@@ -178,8 +184,7 @@ module GitIssue
         begin
           switch_branch(ib)
         rescue GitError
-          create_branch(ib)
-          switch_branch(ib)
+          create_orphan_branch(ib)
         end
         FileUtils.mkdir_p(issues_folder_path)
         begin
@@ -541,7 +546,9 @@ module GitIssue
         "#{pad_status}  #{short_id}  #{title}#{tag_str}"
       when "oneline"
         short_status = "#{status[0]}".capitalize
-        "#{short_status} #{short_id} #{title}"
+        def_tag = tags[GitWorker.default_tag]
+        kind = (def_tag.nil? ? "  " : def_tag.value)
+        "#{short_status} #{short_id} #{kind}: #{title}"
       when "detail"
         detail_string
       end
@@ -632,7 +639,7 @@ module GitIssue
 "\
 #{issue_id}
 Title:      #{tags[:title].value}
-Created by: #{tags[:creator].value} at #{tags[:created_at].value}
+Created by: #{tags[:creator].value} at #{Time.at(tags[:created_at].value)}
 Tags:       #{tag_string}
 
 #{tags[:description].value}
@@ -700,7 +707,7 @@ module GitIssue
         if issues.length == 0 then
           raise IssueError.new "could not find an issue matching issue-id #{sha}"
         elsif issues.length > 1 then
-          raise IssueError.new "multiple issues match #{options.sha}: #{issues.map{|i| i.issue_id}.inspect}"
+          raise IssueError.new "multiple issues match #{sha}: #{issues.map{|i| i.issue_id}.inspect}"
         end
         issues.shift
       end
@@ -973,6 +980,7 @@ module GitIssue
       options = OpenStruct.new()
       options.tags = []
       options.not_tags = []
+      options.formatter = GitWorker.list_format
       parser = OptionParser.new do |opts|
         opts.on("-a", "--all", "also show closed issues") do |message|
           options.all = true
@@ -1019,12 +1027,8 @@ module GitIssue
       end
 
       issues = issues.sort_by{|i| i.created_at}
-      formatter = options.formatter
-      formatter ||= "withtags"
-
-
-      write_output [Issue.table_header(formatter),
-                    issues.map{|i| i.as_table_row(formatter) }.join("\n")].join("\n")
+      write_output [Issue.table_header(options.formatter),
+                    issues.map{|i| i.as_table_row(options.formatter) }.join("\n")].join("\n")
     end
     @@help_message ="\
 Queries the issue datastore.
@@ -1169,7 +1173,9 @@ module GitIssue
        "issue.folder" =>
          "Folder to store issue information. Defaults to \".issue\"",
        "issue.default-tag" =>
-         "Default tag for convenience syntax. Defaults to \"kind\""
+         "Default tag for convenience syntax. Defaults to \"kind\"",
+       "issue.list-format" =>
+         "Default format to use with --pretty switch. Defaults to \"withtags\"",
       }.map do |k, desc|
         value = GitWorker.config(k)
         if value.nil? then
@@ -1210,7 +1216,6 @@ module GitIssue
         end
 
       end
-      warn args.inspect
       parser.parse!(args)
       if options.list then
         # skip sha and tag validation
@@ -1225,7 +1230,6 @@ module GitIssue
       issue = get_issue(options.sha)
 
       if options.delete then
-        warn options.inspect
         Tag.delete(issue, options.delete)
         write_output "successfully deleted tag(s) '#{options.delete.keys.join(", ")}' from #{issue.short_id}"
       elsif options.list then
