@@ -47,6 +47,32 @@ module GitIssue
       "#{create_time}: #{summary_str} - #{self.title}#{desc}"
     end
 
+    def markdown_string
+
+      case event_type
+      when :create
+        ""
+      when :set_tag
+        if Issue.standard_tags.any?{|t| t.to_s == title} then
+          ""
+        else
+          "\
+#{"set #{text}  "}
+_#{creator} at #{Time.at(created_at)}_"
+        end
+      when :comment
+"\
+new comment:
+
+> \#\#\#\# #{title}
+> #{text}
+
+_#{creator} at #{Time.at(created_at)}_
+"     else
+        ""
+      end
+    end
+
     def self.create(issue, new_event_args)
       event_obj = nil
       GitWorker.work_on_issues_branch do |issues_folder|

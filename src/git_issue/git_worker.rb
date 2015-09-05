@@ -160,28 +160,38 @@ module GitIssue
       end
 
     end
-
-    def self.work_on_issues_branch &block
-      ib = issues_branch
+    def self.work_on_branch(target_branch, options = {}, &block)
       orig_branch = current_branch
-      issues_folder_path = "#{path_to_top_level}#{issues_folder}"
-      if orig_branch == ib then
-        block.call(issues_folder_path)
+      base_path = path_to_top_level
+      if target_branch == orig_branch then
+        block.call(base_path)
       else
         need_to_stash = (pending_changes?)
         stash_all if need_to_stash
         begin
-          switch_branch(ib)
+          switch_branch(target_branch)
         rescue GitError
-          create_orphan_branch(ib)
+          if options[:create_orphan] then
+            create_orphan_branch(target_branch)
+          else
+            raise IssueError.new("#{target_branch} does not exist")
+          end
         end
-        FileUtils.mkdir_p(issues_folder_path)
         begin
-          block.call(issues_folder_path)
+          block.call(base_path)
         ensure
           switch_branch(orig_branch)
           unstash if need_to_stash
         end
+      end
+
+    end
+
+    def self.work_on_issues_branch &block
+      issues_folder_path = "#{path_to_top_level}#{issues_folder}"
+      work_on_branch(issues_branch, create_orphan: true) do
+        FileUtils.mkdir_p(issues_folder_path)
+        block.call(issues_folder_path)
       end
     end
   end
