@@ -5,7 +5,7 @@ layout: default
 
 ## \#298bdb9c: Crash during publish
 
-###Status: **Open**
+###Status: **Closed**
 _created by meyer.cm@gmail.com (Chris Meyer) at 2015-09-06 10:49:46 -0400_
 
 I think the issue is based on a non-0 return from commit because the generated
