@@ -45,13 +45,14 @@ module GitIssue
       text = "\
 ---
 layout: default
+title: Issues
 ---
 <div>
-  <p>Open issues:</p>
+  <p>Open issues: (#{others.count})</p>
   <ul class=\"issue_list\">
     #{(others.map{|i| one_issue_for_index(i)}).join("\n")}
   </ul>
-  <p>Closed issues:</p>
+  <p>Closed issues: (#{closed.count})</p>
   <ul class=\"issue_list\">
     #{(closed.map{|i| one_issue_for_index(i)}).join("\n")}
   </ul>
@@ -73,7 +74,7 @@ layout: default
           </span>
           #{(i.custom_tags.map do |_k, t|
 "\
-<span class=\"tag_string\">#{t.detail_string}</span>
+<div class=\"tag_string\">#{t.detail_string}</div>
 "
              end).join("\n")}
         </div>
