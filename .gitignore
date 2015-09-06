@@ -1,2 +1,4 @@
 *.sublime-*
 garbage.rb
+.sass-cache
+_site/
