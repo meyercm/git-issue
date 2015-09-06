@@ -56,6 +56,7 @@ title: Issues
   <ul class=\"issue_list\">
     #{(closed.map{|i| one_issue_for_index(i)}).join("\n")}
   </ul>
+  <p class=\"generation_time\">Generated at #{Time.now}</p>
 </div>
 "
       File.open(filename, 'w') do |f|
