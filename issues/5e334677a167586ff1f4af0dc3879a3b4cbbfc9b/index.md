@@ -5,7 +5,7 @@ layout: default
 
 ## \#5e334677: create a publish command to write to the gh-pages branch
 
-###Status: **Open**
+###Status: **Closed**
 _created by meyer.cm@gmail.com (Chris Meyer) at 2015-09-05 13:11:22 -0400_
 
 Originally, I thought to have a sweet set of layouts that could simply interpret
