@@ -171,28 +171,38 @@ module GitIssue
       end
 
     end
-
-    def self.work_on_issues_branch &block
-      ib = issues_branch
+    def self.work_on_branch(target_branch, options = {}, &block)
       orig_branch = current_branch
-      issues_folder_path = "#{path_to_top_level}#{issues_folder}"
-      if orig_branch == ib then
-        block.call(issues_folder_path)
+      base_path = path_to_top_level
+      if target_branch == orig_branch then
+        block.call(base_path)
       else
         need_to_stash = (pending_changes?)
         stash_all if need_to_stash
         begin
-          switch_branch(ib)
+          switch_branch(target_branch)
         rescue GitError
-          create_orphan_branch(ib)
+          if options[:create_orphan] then
+            create_orphan_branch(target_branch)
+          else
+            raise IssueError.new("#{target_branch} does not exist")
+          end
         end
-        FileUtils.mkdir_p(issues_folder_path)
         begin
-          block.call(issues_folder_path)
+          block.call(base_path)
         ensure
           switch_branch(orig_branch)
           unstash if need_to_stash
         end
+      end
+
+    end
+
+    def self.work_on_issues_branch &block
+      issues_folder_path = "#{path_to_top_level}#{issues_folder}"
+      work_on_branch(issues_branch, create_orphan: true) do
+        FileUtils.mkdir_p(issues_folder_path)
+        block.call(issues_folder_path)
       end
     end
   end
@@ -433,6 +443,32 @@ module GitIssue
       summary_str = "#{creator} #{type_string}"
       desc = ("#{self.text}" == "") ? "" : "\n#{self.text}"
       "#{create_time}: #{summary_str} - #{self.title}#{desc}"
+    end
+
+    def markdown_string
+
+      case event_type
+      when :create
+        ""
+      when :set_tag
+        if Issue.standard_tags.any?{|t| t.to_s == title} then
+          ""
+        else
+          "\
+#{"set #{text}  "}
+_#{creator} at #{Time.at(created_at)}_"
+        end
+      when :comment
+"\
+new comment:
+
+> \#\#\#\# #{title}
+> #{text}
+
+_#{creator} at #{Time.at(created_at)}_
+"     else
+        ""
+      end
     end
 
     def self.create(issue, new_event_args)
@@ -1137,6 +1173,131 @@ Examples:
   end
 end
 #end of new_command.rb
+
+
+module GitIssue
+  class PublishCommand < BaseCommand
+    def parse(args)
+      options = OpenStruct.new()
+      options.branch = "gh-pages"
+      options.folder = "issues"
+      parser = OptionParser.new do |opts|
+        opts.on("-b", "--branch BRANCH_NAME", "branch to publish to") do |branch|
+          options.branch = branch
+
+        end
+        opts.on("-f", "--branch FOLDER_NAME", "folder to publish to") do |folder|
+          options.folder = folder
+
+        end
+      end
+      parser.parse!(args)
+
+      options
+    end
+
+    def run(options)
+      GitWorker.work_on_branch(options.branch) do |base_folder|
+        working_folder = "#{base_folder}#{options.folder}"
+        FileUtils.mkdir_p(working_folder) #this way rm_rf can't complain
+        FileUtils.rm_rf(working_folder)
+        FileUtils.mkdir_p(working_folder)
+        create_page(working_folder)
+        GitWorker.add(working_folder)
+        GitWorker.commit("git-issue publish issues")
+      end
+    end
+
+    def create_page(working_folder)
+      issues = Issue.all.sort_by{|i| i.created_at}.reverse
+      write_index("#{working_folder}/index.html", issues)
+      issues.each do |i|
+        write_issue(working_folder, i)
+      end
+    end
+    def write_index(filename, all_issues)
+      closed, others = all_issues.partition{|i| i.status == "closed"}
+      text = "\
+---
+layout: default
+title: Issues
+---
+<div>
+  <p>Open issues: (#{others.count})</p>
+  <ul class=\"issue_list\">
+    #{(others.map{|i| one_issue_for_index(i)}).join("\n")}
+  </ul>
+  <p>Closed issues: (#{closed.count})</p>
+  <ul class=\"issue_list\">
+    #{(closed.map{|i| one_issue_for_index(i)}).join("\n")}
+  </ul>
+</div>
+"
+      File.open(filename, 'w') do |f|
+        f.write(text)
+      end
+    end
+
+    def one_issue_for_index(i)
+      "\
+    <li>
+      <div class=\"issue_list_entry\">
+        <a href=\"#{i.issue_id}\">#{i.title}</a>
+        <div class=\"issue_list_meta\">
+          <span>
+            \##{i.short_id} created on #{Time.at(i.created_at)}
+          </span>
+          #{(i.custom_tags.map do |_k, t|
+"\
+<div class=\"tag_string\">#{t.detail_string}</div>
+"
+             end).join("\n")}
+        </div>
+      </div>
+    </li>"
+    end
+
+    def write_issue(parent_folder, issue)
+      issue_folder = "#{parent_folder}/#{issue.issue_id}"
+      FileUtils.mkdir_p(issue_folder)
+      text = "\
+---
+layout: default
+---
+[back to issues](..)
+
+\#\# \\\##{issue.short_id}: #{issue.title}
+
+\#\#\#Status: **#{issue.status.capitalize}**
+_created by #{issue.creator} at #{Time.at(issue.created_at)}_
+
+#{issue.description}
+
+#{issue.events.sort_by{|e| e.created_at}.map{|e| e.markdown_string}.delete_if{|r| r == ""}.join("\n\n---\n")}
+"
+
+      File.open("#{issue_folder}/index.md", "w") do |f|
+        f.write(text)
+      end
+    end
+
+  end
+  @@help_message ="\
+Publishes all issues to the specified branch for use with Jekyll.
+
+Usage:   git issue publish [options]
+
+Options:
+  -f, --folder FOLDER_NAME
+    Specifies the folder to use as the root.  Defaults to \"issues\".
+
+  -b, --branch BRANCH_NAME
+    Specifies which branch to publish to.  Defaults to \"gh-pages\".
+Examples:
+  git issue publish
+"
+end
+#end of publish_command.rb
 
 
 module GitIssue
