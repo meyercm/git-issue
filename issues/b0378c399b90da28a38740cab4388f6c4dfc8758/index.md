@@ -5,7 +5,7 @@ layout: default
 
 ## \#b0378c39: crash in 'git issue new bug' with  empty message
 
-###Status: **Open**
+###Status: **Closed**
 _created by meyer.cm@gmail.com (Chris Meyer) at 2015-09-06 10:51:39 -0400_
 
 It should have just aborted cleanly.
