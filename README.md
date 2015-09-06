@@ -1,7 +1,9 @@
 
 
 # git-issue
-Git extension command for distributed (feature|bug|todo|etc.) tracking within the repository.  Inspired by the now defunct [git-issues](https://github.com/duplys/git-issues) python script.
+Git extension command for distributed [feature | bug | todo | etc.] tracking within the repository.  Inspired by the now defunct [git-issues](https://github.com/duplys/git-issues) python script.
+
+Issues for git-issue are tracked with git-issue. Clone the repo, or try the [read-only web version](http://meyercm.github.io/git-issue/issues)
 
 ## Quick Example
 - open a new issue
