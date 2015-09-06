@@ -33,12 +33,12 @@ module GitIssue
     def clean_message!(message)
       split_message = message.split("\n")
       split_message.delete_if {|i| i =~ /^\s*\#\$\#/}
+      if split_message.join("").strip == "" then
+        raise IssueError.new "Empty issue message, Aborting"
+      end
       title = split_message[0].strip
 
       clean_message = split_message[1..-1].map{|l| l.rstrip}.join("\n").strip
-      if clean_message == "" and title == "" then
-        raise IssueError.new "Empty issue message, Aborting"
-      end
       [title, clean_message]
     end
 
