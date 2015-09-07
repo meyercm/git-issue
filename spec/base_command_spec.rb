@@ -1,6 +1,4 @@
-require 'rspec'
-load File.expand_path("../target.rb", __FILE__)
-
+require 'spec_helper'
 describe GitIssue::BaseCommand do
   describe "#clean_message!" do
     it "raises an IssueError on empty message" do

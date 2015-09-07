@@ -2,3 +2,5 @@
 garbage.rb
 .sass-cache
 _site/
+coverage/
+Gemfile.lock
