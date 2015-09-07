@@ -5,6 +5,8 @@ Git extension command for distributed [feature | bug | todo | etc.] tracking wit
 
 Issues for git-issue are tracked with git-issue. Clone the repo, or try the [read-only web version](http://meyercm.github.io/git-issue/issues)
 
+[![Build Status](https://secure.travis-ci.org/meyercm/git-issue.png)](http://travis-ci.org/meyercm/git-issue)
+
 ## Quick Example
 - open a new issue
 - list issues
