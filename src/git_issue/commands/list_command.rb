@@ -28,8 +28,7 @@ module GitIssue
 
       cl_tag = args.shift
       if cl_tag then
-        options.tags << Tag.new({key: GitWorker.default_tag,
-                                value: cl_tag})
+        options.tags << Tag.new({:key => GitWorker.default_tag, :value => cl_tag})
       end
 
       options

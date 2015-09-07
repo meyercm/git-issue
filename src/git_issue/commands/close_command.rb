@@ -42,14 +42,13 @@ module GitIssue
       write_output "#{issue.short_id} successfully closed"
 
     end
-@@default_message = "
+@@default_message = '
 
 #$# Add a reason for closing this issue.
-#$# Lines beginning with a '#$#' are ignored, and an empty message aborts the
+#$# Lines beginning with a "#$#"" are ignored, and an empty message aborts the
 #$# operation.
-"
-@@help_message ="\
-Closes an issue.  Closed issues have a status of \"closed\", and do not appear
+'
+@@help_message ='Closes an issue.  Closed issues have a status of \"closed\", and do not appear
 in the query results of `git issue list`, unless `--all` is passed to that
 command.  Currently, the only way to re-open an issue is with the `tag`
 command, e.g. `git issue tag <issue_id> status:open`
@@ -69,6 +68,6 @@ Examples:
   git issue close cc4
   git issue close 3cf91 -t deferred:true
   git issue close a3e --editor
-"
+'
   end
 end

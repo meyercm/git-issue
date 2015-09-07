@@ -38,15 +38,14 @@ module GitIssue
       end
 
     end
-@@default_message = "
+@@default_message = '
 
 #$# Add a comment above.  The first line will be treated as the title of the
 #$# comment, remaining lines as the body.
-#$# Lines beginning with a '#$#' are ignored, and an empty message aborts the
+#$# Lines beginning with a "#$#" are ignored, and an empty message aborts the
 #$# operation.
-"
-@@help_message ="\
-Adds a comment to an issue.  Comments can be viewed using the `git issue show`
+'
+@@help_message ='Adds a comment to an issue.  Comments can be viewed using the `git issue show`
 command.
 
 Usage:   git issue comment <issue_id> [options]
@@ -60,8 +59,8 @@ Options:
 
 Examples:
   git issue comment cc4
-  git issue comment 3cf91 -m \"I love git-issue\"
+  git issue comment 3cf91 -m "I love git-issue"
   git issue comment -d ae
-"
+'
   end
 end

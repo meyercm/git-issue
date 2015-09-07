@@ -92,6 +92,10 @@ Issue events provide historical tracking information (without needing to parse t
  - Ruby >= 1.8.7
  - Git >= ?.?.?
 
+ #####Development Requirements:
+  - Ruby >= 1.9.3 (ruby_collate needs `require_relative`)
+  - bundler (for rspec)
+
 ####Installation:
  1. copy the file `git-issue` to a location of your choice on your computer.
  2. make the file executable.

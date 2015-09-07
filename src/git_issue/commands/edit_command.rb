@@ -30,16 +30,14 @@ module GitIssue
       write_output "#{issue.short_id} successfully updated"
     end
 
-@@default_message =
-"
+@@default_message ='
 #$# Edit the title and description for this Issue.  The title should occupy the
 #$# first line of the file, and be followed by a blank line.  On the lines
 #$# following that blank line, feel free to add a more detailed description.
-#$# Lines beginning with a '#$#' are ignored, and an empty message aborts the
+#$# Lines beginning with a "#$#" are ignored, and an empty message aborts the
 #$# operation.
-"
-@@help_message ="\
-Opens an editor to edits the title and description of an issue. The first line
+'
+@@help_message ='Opens an editor to edits the title and description of an issue. The first line
 of the editor result will be interpreted as the new title, and the remaining
 lines as the description of the issue.
 
@@ -47,6 +45,6 @@ Usage:   git issue edit <issue_id>
 
 Examples:
   git issue edit cc4
-"
+'
   end
 end

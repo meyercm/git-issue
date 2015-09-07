@@ -200,7 +200,7 @@ module GitIssue
 
     def self.work_on_issues_branch &block
       issues_folder_path = "#{path_to_top_level}#{issues_folder}"
-      work_on_branch(issues_branch, create_orphan: true) do
+      work_on_branch(issues_branch, {:create_orphan => true}) do
         FileUtils.mkdir_p(issues_folder_path)
         block.call(issues_folder_path)
       end
@@ -824,14 +824,13 @@ module GitIssue
       write_output "#{issue.short_id} successfully closed"
 
     end
-@@default_message = "
+@@default_message = '
 
 #$# Add a reason for closing this issue.
-#$# Lines beginning with a '#$#' are ignored, and an empty message aborts the
+#$# Lines beginning with a "#$#"" are ignored, and an empty message aborts the
 #$# operation.
-"
-@@help_message ="\
-Closes an issue.  Closed issues have a status of \"closed\", and do not appear
+'
+@@help_message ='Closes an issue.  Closed issues have a status of \"closed\", and do not appear
 in the query results of `git issue list`, unless `--all` is passed to that
 command.  Currently, the only way to re-open an issue is with the `tag`
 command, e.g. `git issue tag <issue_id> status:open`
@@ -851,7 +850,7 @@ Examples:
   git issue close cc4
   git issue close 3cf91 -t deferred:true
   git issue close a3e --editor
-"
+'
   end
 end
 #end of close_command.rb
@@ -894,15 +893,14 @@ module GitIssue
       end
 
     end
-@@default_message = "
+@@default_message = '
 
 #$# Add a comment above.  The first line will be treated as the title of the
 #$# comment, remaining lines as the body.
-#$# Lines beginning with a '#$#' are ignored, and an empty message aborts the
+#$# Lines beginning with a "#$#" are ignored, and an empty message aborts the
 #$# operation.
-"
-@@help_message ="\
-Adds a comment to an issue.  Comments can be viewed using the `git issue show`
+'
+@@help_message ='Adds a comment to an issue.  Comments can be viewed using the `git issue show`
 command.
 
 Usage:   git issue comment <issue_id> [options]
@@ -916,9 +914,9 @@ Options:
 
 Examples:
   git issue comment cc4
-  git issue comment 3cf91 -m \"I love git-issue\"
+  git issue comment 3cf91 -m "I love git-issue"
   git issue comment -d ae
-"
+'
   end
 end
 #end of comment_command.rb
@@ -987,16 +985,14 @@ module GitIssue
       write_output "#{issue.short_id} successfully updated"
     end
 
-@@default_message =
-"
+@@default_message ='
 #$# Edit the title and description for this Issue.  The title should occupy the
 #$# first line of the file, and be followed by a blank line.  On the lines
 #$# following that blank line, feel free to add a more detailed description.
-#$# Lines beginning with a '#$#' are ignored, and an empty message aborts the
+#$# Lines beginning with a "#$#" are ignored, and an empty message aborts the
 #$# operation.
-"
-@@help_message ="\
-Opens an editor to edits the title and description of an issue. The first line
+'
+@@help_message ='Opens an editor to edits the title and description of an issue. The first line
 of the editor result will be interpreted as the new title, and the remaining
 lines as the description of the issue.
 
@@ -1004,7 +1000,7 @@ Usage:   git issue edit <issue_id>
 
 Examples:
   git issue edit cc4
-"
+'
   end
 end
 #end of edit_command.rb
@@ -1038,8 +1034,7 @@ module GitIssue
 
       cl_tag = args.shift
       if cl_tag then
-        options.tags << Tag.new({key: GitWorker.default_tag,
-                                value: cl_tag})
+        options.tags << Tag.new({:key => GitWorker.default_tag, :value => cl_tag})
       end
 
       options
@@ -1136,16 +1131,15 @@ module GitIssue
       write_output "#{issue.short_id} successfully created"
     end
 
-@@default_message =
-"
+@@default_message = '
 
 #$# Add a title and description for this Issue.  The title should occupy the
 #$# first line of the file, and be followed by a blank line.  On the lines
 #$# following that blank line, feel free to add a more detailed description.
-#$# Lines beginning with a '#$#' are ignored, and an empty message aborts the
+#$# Lines beginning with a "#$#" are ignored, and an empty message aborts the
 #$# operation.
-"
-@@help_message ="\
+'
+@@help_message ='
 Creates a new issue.
 
 Usage:   git issue new [default_tag_specifier] [options]
@@ -1168,8 +1162,8 @@ Options:
 Examples:
   git issue new
   git issue new feature -t milestone:2.0.5,priority:high
-  git issue new bug -m \"login screen broken\"
-"
+  git issue new bug -m "login screen broken"
+'
   end
 end
 #end of new_command.rb

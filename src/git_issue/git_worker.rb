@@ -189,7 +189,7 @@ module GitIssue
 
     def self.work_on_issues_branch &block
       issues_folder_path = "#{path_to_top_level}#{issues_folder}"
-      work_on_branch(issues_branch, create_orphan: true) do
+      work_on_branch(issues_branch, {:create_orphan => true}) do
         FileUtils.mkdir_p(issues_folder_path)
         block.call(issues_folder_path)
       end
