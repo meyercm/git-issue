@@ -1109,20 +1109,22 @@ module GitIssue
       options = OpenStruct.new()
       options.message = ""
       options.tags = []
+      allrawtags = []
       parser = OptionParser.new do |opts|
         opts.on("-m", "--message MESSAGE", "Title for this Issue") do |message|
           options.message = message
         end
         opts.on("-t", "--tag TAGS", "tags to place on this Issue") do |tags|
-          options.tags = Helper.validate_tagstr(tags)
+          allrawtags << tags
         end
       end
       parser.parse!(args)
 
       cl_tag = args.shift
       if cl_tag then
-        options.tags << [GitWorker.default_tag, cl_tag]
+        allrawtags << "#{GitWorker.default_tag}:#{cl_tag}"
       end
+      options.tags = Tag.parse(allrawtags.join(","))
       options
     end
 
