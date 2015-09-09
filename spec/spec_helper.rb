@@ -5,7 +5,5 @@ end
 ENV['GIT_ISSUE_TEST'] = 'true'
 load File.expand_path("../target.rb", __FILE__)
 
-warn `git --version`
-# def rig &block
 
-# end
+#travis has git 1.8.5.6 as of 7Sep2015

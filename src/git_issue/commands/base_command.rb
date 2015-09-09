@@ -30,10 +30,10 @@ module GitIssue
       result
     end
 
-    def clean_message!(message)
+    def clean_message!(message, options = {:raise => true})
       split_message = message.split("\n")
       split_message.delete_if {|i| i =~ /^\s*\#\$\#/}
-      if split_message.join("").strip == "" then
+      if split_message.join("").strip == "" and options[:raise] then
         raise IssueError.new "Empty issue message, Aborting"
       end
       title = split_message[0].strip

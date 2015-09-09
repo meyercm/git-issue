@@ -25,7 +25,7 @@ module GitIssue
     end
 
     def run(options)
-      title = options.message
+      title, description = clean_message!(options.message, :raise => false)
       if title == "" then
         title, description = get_message_from_editor(@@default_message)
       end
