@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe GitIssue::NewCommand do
   before do
-    #stub out write_output
+    allow(subject).to receive(:write_output).and_return(nil)
   end
   describe '#parse' do
   end
@@ -28,7 +28,10 @@ bub'
       expect(GitIssue::Issue).to receive(:create_new).with("hi", "", tags).and_return(OpenStruct.new({:short_id => "12345678"}))
       subject.run(@options)
     end
-    it "gets a message from the editor if there isn't one in the options"
-    it "doesn't get a message from the editor if there is one in the options"
+    it "gets a message from the editor if there isn't one in the options" do
+      expect(subject).to receive(:get_message_from_editor).and_return(["test_title", "test_desc"])
+      expect(GitIssue::Issue).to receive(:create_new).with("test_title", "test_desc", nil).and_return(OpenStruct.new({:short_id => "12345678"}))
+      subject.run(@options)
+    end
   end
 end
