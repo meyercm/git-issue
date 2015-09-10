@@ -3,13 +3,18 @@ require 'spec_helper'
 
 describe 'blind test- just check result codes' do
   it "is a test" do
-    suppress_output do
+    #suppress_output do
       git_issue_loc = File.expand_path('../../git-issue', __FILE__)
       Dir.mktmpdir do |d|
-
+system("bash --version")
         Dir.chdir(d)
         result = system("git init")
         expect(result).to eq(true)
+        result = system("git config user.name blah")
+        expect(result).to eq(true)
+        result = system("git config user.email blah@blah.blah")
+        expect(result).to eq(true)
+
         result = system("git commit --allow-empty -m init")
         expect(result).to eq(true)
         warn git_issue_loc
@@ -32,6 +37,6 @@ describe 'blind test- just check result codes' do
 
 
       end
-    end
+    #end
   end
 end

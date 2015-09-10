@@ -41,14 +41,17 @@ module GitIssue
     def self.terminal_size
       rows, cols = [39, 79]
       if RUBY_VERSION =~ /2\.\d.\d/ then
-        window = [0,0,0,0].pack('SSSS')
+        begin
+          window = [0,0,0,0].pack('SSSS')
 
-        fd = IO.sysopen("/dev/tty", "w")
-        terminal = IO.new(fd, "w")
+          fd = IO.sysopen("/dev/tty", "w")
+          terminal = IO.new(fd, "w")
 
-        terminal.ioctl(1074295912, window)
+          terminal.ioctl(1074295912, window)
 
-        rows, cols, _width, _height = window.unpack('SSSS')
+          rows, cols, _width, _height = window.unpack('SSSS')
+        rescue
+        end
       elsif ENV['LINES'] and ENV['COLUMNS']
         rows = ENV['LINES']
         cols = ENV['COLUMNS']
