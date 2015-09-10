@@ -40,8 +40,9 @@ module GitIssue
     end
     def self.create_orphan_branch(branch_name)
       top_level = path_to_top_level
+      top_level = "." if top_level == ""
       run("git checkout --orphan #{branch_name}")
-      run("git rm -rf #{top_level}")
+      run("git rm -r -f --ignore-unmatch #{top_level}")
       commit("initial commit of #{branch_name}", "--allow-empty")
     end
     def self.switch_branch(branch_name)
