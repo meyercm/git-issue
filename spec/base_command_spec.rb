@@ -37,4 +37,13 @@ blahblah
 blahblah   ")).to eq(["hey you", "blahblah"])
     end
   end
+
+  describe "#validate_sha" do
+    it "returns the sha for potential shas" do
+      expect(subject.validate_sha("deadbeef")).to eq("deadbeef")
+    end
+    it "raises issue error for garbage" do
+      expect{subject.validate_sha("hey you guys!")}.to raise_error GitIssue::IssueError
+    end
+  end
 end
