@@ -103,7 +103,7 @@ module GitIssue
       end
     end
     def self.hash_str(data)
-      run("echo '#{Helper.shellescape(data)}' | git hash-object --stdin")
+      run("echo \"#{Helper.shellescape(data)}\" | git hash-object --stdin")
     end
     def self.hash_file(filename)
       run("git hash-object #{filename}")
