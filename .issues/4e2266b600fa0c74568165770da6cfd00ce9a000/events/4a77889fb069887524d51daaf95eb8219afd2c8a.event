@@ -1,0 +1,13 @@
+---
+:creator: meyer.cm@gmail.com (Chris Meyer)
+:title: confirmed.
+:text: |-
+  After the creation of this issue, I ran 'git status' as the next command, and
+  got 'fatal: Unable to read current working directory: No such file or directory'
+  back from git.  Typing 'cd $PWD' as suggested by SO seemed to fix the funky
+  state.
+
+  More reason to flip the write access to something other than full branch swap.
+:created_at: 1441934863.3362849
+:event_type: :comment
+:event_id: 4a77889fb069887524d51daaf95eb8219afd2c8a
