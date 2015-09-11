@@ -10,7 +10,7 @@ require_relative '../models/issue'
 module GitIssue
   class BaseCommand
     def self.help_message
-      self.class_variable_get(:@@help_message)
+      class_variable_get(:@@help_message)
     end
 
     def get_message_from_editor(initial_editor_text, clean=true)
