@@ -51,16 +51,18 @@ module GitIssue
     end
     def self.create_orphan_branch(branch_name)
       top_level = path_to_top_level
-      top_level = "." if top_level == ""
+      raise GitError.new() unless  top_level == "."
       run("git checkout --orphan #{branch_name}")
-      run("git rm -r -f --ignore-unmatch #{top_level}")
+      run("git rm -r -f --ignore-unmatch .")
       commit("initial commit of #{branch_name}", "--allow-empty")
     end
     def self.switch_branch(branch_name)
       run("git checkout #{branch_name}")
     end
     def self.path_to_top_level
-      run("git rev-parse --show-cdup")
+      result = run("git rev-parse --show-cdup")
+      result = "." if result == ""
+      result
     end
     def self.remove_folder(path)
       run("git rm -r #{path}")
@@ -174,34 +176,40 @@ module GitIssue
     end
     def self.work_on_branch(target_branch, options = {}, &block)
       orig_branch = current_branch
-      base_path = path_to_top_level
-      if target_branch == orig_branch then
-        block.call(base_path)
-      else
+      orig_dir = Dir.pwd
+      Dir.chdir(path_to_top_level)
+      begin
         need_to_stash = (pending_changes?)
         stash_all if need_to_stash
-        begin
-          switch_branch(target_branch)
-        rescue GitError
-          if options[:create_orphan] then
-            create_orphan_branch(target_branch)
-          else
-            raise IssueError.new("#{target_branch} does not exist")
+        if target_branch == orig_branch then
+          block.call
+        else
+          # first, get to the right branch
+          begin
+            switch_branch(target_branch)
+          rescue GitError
+            if options[:create_orphan] then
+              create_orphan_branch(target_branch)
+            else
+              raise IssueError.new("#{target_branch} does not exist")
+            end
+          end
+          # now, do the work and get back to the original branch
+          begin
+            block.call
+          ensure
+            switch_branch(orig_branch)
           end
         end
-        begin
-          block.call(base_path)
-        ensure
-          switch_branch(orig_branch)
-          unstash if need_to_stash
-        end
+      ensure
+        unstash if need_to_stash
+        Dir.chdir(orig_dir)
       end
-
     end
 
     def self.work_on_issues_branch &block
-      issues_folder_path = "#{path_to_top_level}#{issues_folder}"
       work_on_branch(issues_branch, {:create_orphan => true}) do
+        issues_folder_path = issues_folder
         FileUtils.mkdir_p(issues_folder_path)
         block.call(issues_folder_path)
       end

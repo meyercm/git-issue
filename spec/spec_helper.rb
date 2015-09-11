@@ -25,3 +25,23 @@ def suppress_output
   end
   retval
 end
+
+def check_execute(cmd_ary)
+  suppress_output do
+    cmd_ary.each do |cmd|
+      result = system(cmd)
+      expect(result).to eq(true)
+    end
+  end
+end
+
+def setup_git_dir
+  check_execute([
+    "git init",
+    "git config user.name blah",
+    "git config user.email blah@blah.blah",
+    "git commit --allow-empty -m init",
+    "git checkout --orphan publish_branch",
+    "git commit --allow-empty -m init",
+  ])
+end

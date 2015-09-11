@@ -1,23 +1,5 @@
 require 'spec_helper'
 
-def check_execute(cmd_ary)
-  cmd_ary.each do |cmd|
-    result = system(cmd)
-    expect(result).to eq(true)
-  end
-
-end
-def setup_git_dir
-  check_execute([
-    "git init",
-    "git config user.name blah",
-    "git config user.email blah@blah.blah",
-    "git commit --allow-empty -m init",
-    "git checkout --orphan publish_branch",
-    "git commit --allow-empty -m init",
-  ])
-end
-
 describe 'blind test- just check result codes' do
   it "can run through the general paces" do
     suppress_output do
