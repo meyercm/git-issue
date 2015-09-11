@@ -1,0 +1,11 @@
+---
+:creator: meyer.cm@gmail.com (Chris Meyer)
+:title: test idea
+:text: |-
+  Make another 'blind' test, but in the tempdir, clone the repo under test
+  I wonder if the bug isn't showing up in the test repos because they only have
+  a single folder/file, and 1 or 2 commits, vs. the real world, like this repo
+  with many files and commits, etc.
+:created_at: 1441935441.730881
+:event_type: :comment
+:event_id: b213754eb37ba526987636abbb55e6fe7fd10243
