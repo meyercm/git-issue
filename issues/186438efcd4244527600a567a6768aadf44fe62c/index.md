@@ -5,7 +5,7 @@ layout: default
 
 ## \#186438ef: can't create issue on 1.8.7
 
-###Status: **Open**
+###Status: **Closed**
 _created by meyer.cm@gmail.com (Chris Meyer) at 2015-09-09 13:30:51 -0400_
 
 git commit is failing, claiming that nothing has been added to the index.
