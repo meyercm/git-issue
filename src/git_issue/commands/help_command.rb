@@ -23,7 +23,7 @@ module GitIssue
           command = GitIssue.parse_command(options.sub_command)
         rescue IssueError
         end
-        write_output command.class_variable_get :@@help_message
+        write_output command.help_message
       end
     end
 @@help_message = "\
