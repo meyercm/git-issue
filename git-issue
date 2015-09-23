@@ -28,6 +28,20 @@ module GitIssue
     def self.current_sha(branch = "HEAD")
       run("git rev-parse #{branch}")
     end
+
+    def self.top_tree_sha(branch)
+      info = run("git cat-file commit #{branch}")
+      if info =~ /tree\s+([0-9a-fA-F]{40})/ then
+        $1
+      else
+        raise GitError.new("no tree for #{branch}")
+      end
+    end
+
+    def self.dump_tree(tree_sha)
+      run("git ls-tree --full-tree #{tree_sha}").split("\n")
+    end
+
     def self.current_branch
       res = nil
       begin
@@ -593,7 +607,7 @@ module GitIssue
         tag_str = ctags.none? ? "" : "\n  Tags: #{ctags.map{|k,v| v.detail_string}.join("  ")}"
         "#{pad_status}  #{short_id}  #{title}#{tag_str}"
       when "oneline"
-        short_status = "#{status[0]}".capitalize
+        short_status = "#{status[0..0]}".capitalize
         def_tag = tags[GitWorker.default_tag]
         kind = (def_tag.nil? ? "  " : def_tag.value)
         "#{short_status} #{short_id} #{kind}: #{title}"
@@ -1533,6 +1547,118 @@ git issue help
   end
 end
 #end of help_command.rb
+
+module GitIssue
+  class Node
+    attr_reader :git_sha
+    attr_reader :name
+    attr_writer :changed
+    attr_writer :path
+    attr_accessor :permissions
+    def changed?
+      @changed ||= false
+    end
+
+    def path
+      @path ||= ""
+    end
+
+    def initialize(sha)
+      @git_sha = sha
+    end
+
+  end
+end
+#end of node.rb
+
+module GitIssue
+  class Blob < Node
+    attr_reader :contents
+    def set_contents
+      @changed = true
+    end
+    def write
+      @git_sha = GitWorker.add_file(self)
+    end
+  end
+end
+#end of blob.rb
+
+module GitIssue
+  class Tree < Node
+    attr_accessor :commit
+    attr_accessor :branch
+    def initialize(sha, path)
+      super
+      @children = []
+      GitWorker.dump_tree(sha).each do |l|
+        child = NodeFactory.parse(l)
+        child.path = self.path << child.path
+        @children << child
+      end
+    end
+
+    def add_child(node, trigger = true)
+      if trigger then
+        @changed = true
+      end
+      @children << node
+    end
+
+    def write
+      children.each do |c|
+        c.write
+      end
+      @git_sha = GitWorker.mk_tree(self)
+    end
+  end
+end
+
+#end of tree.rb
+
+module GitIssue
+  class NodeFactory
+
+    def self.get_tree(branch)
+      raise IssueError.new("no such branch: #{branch}") unless GitWorker.branch_exists?(branch)
+      commit_sha = GitWorker.current_sha(branch)
+      top_tree_sha = GitWorker.top_tree_sha(branch)
+      tree = Tree.new(top_tree_sha, [])
+      tree.commit = commit_sha
+      tree.branch = branch
+
+      tree
+    end
+
+    def self.parse(line)
+      split = line.split(/\s+/)
+      case split[1]
+      when "tree"
+        create_tree(*split)
+      when "blob"
+        create_blob(*split)
+      end
+    end
+
+    def self.commit(branch, tree)
+
+    end
+
+
+    def self.create_tree(permissions, _type, orig_sha, path)
+      tree = Tree.new(orig_sha, path)
+      tree.permissions = permissions
+      tree
+    end
+    def self.create_blob(permissions, _type, orig_sha, path)
+      blob = Blob.new(orig_sha, path)
+      blob.permissions = permissions
+      blob
+    end
+
+  end
+end
+#end of node_factory.rb
 
 
 #end of all.rb

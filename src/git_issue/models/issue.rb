@@ -55,7 +55,7 @@ module GitIssue
         tag_str = ctags.none? ? "" : "\n  Tags: #{ctags.map{|k,v| v.detail_string}.join("  ")}"
         "#{pad_status}  #{short_id}  #{title}#{tag_str}"
       when "oneline"
-        short_status = "#{status[0]}".capitalize
+        short_status = "#{status[0..0]}".capitalize
         def_tag = tags[GitWorker.default_tag]
         kind = (def_tag.nil? ? "  " : def_tag.value)
         "#{short_status} #{short_id} #{kind}: #{title}"
