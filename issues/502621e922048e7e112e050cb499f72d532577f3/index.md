@@ -5,7 +5,7 @@ layout: default
 
 ## \#502621e9: blows up from subdirectories
 
-###Status: **Open**
+###Status: **Closed**
 _created by meyer.cm@gmail.com (Chris Meyer) at 2015-09-10 12:18:20 -0400_
 
 I think the issue is that the subdir doesn't exist in the issues
