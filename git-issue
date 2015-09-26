@@ -11,6 +11,110 @@ end
 #end of errors.rb
 
 require 'fileutils'
+require 'ostruct'
+module GitIssue
+  class Helper
+    def self.first_non_blank(ary)
+      ary.delete("")
+      ary.delete(nil)
+      ary.first
+    end
+    def self.is_full_sha?(str)
+      !!(str =~ /^[a-fA-F0-9]{40}$/)
+    end
+    def self.is_partial_sha?(str)
+      !!(str =~ /^[a-fA-F0-9]{1,40}$/)
+    end
+    def self.is_tag_spec(tag_str)
+      result = catch :failed do # will be nil if thrown, else true
+        throw :failed if tag_str.nil?
+        split = tag_str.split(":")
+        throw :failed if split.length > 2
+        throw :failed if split[0] !~ /^\w+$/
+        throw :failed if split[1] and split[1] =~ /\s/
+
+        true # only get here if it's legit.
+      end
+      !!result
+    end
+
+    def self.tags_match(tag_ary, obj_tags)
+      tag_ary.all? do |tag_q|
+        if tag_q.value then
+          regx = "^#{tag_q.value.gsub("?", ".{1}").gsub("*", ".*?")}$"
+          obj_tags.any?{|_k, o_t| o_t.key == tag_q.key and
+                              o_t.value =~ /#{regx}/}
+        else
+          obj_tags.any?{|_k, o_t| o_t.key == tag_q.key}
+        end
+      end
+    end
+
+    def self.terminal_size
+      rows, cols = [39, 79]
+      if RUBY_VERSION =~ /2\.\d.\d/ then
+        begin
+          window = [0,0,0,0].pack('SSSS')
+
+          fd = IO.sysopen("/dev/tty", "w")
+          terminal = IO.new(fd, "w")
+
+          terminal.ioctl(1074295912, window)
+
+          rows, cols, _width, _height = window.unpack('SSSS')
+        rescue
+        end
+      elsif ENV['LINES'] and ENV['COLUMNS']
+        rows = ENV['LINES']
+        cols = ENV['COLUMNS']
+      end
+      OpenStruct.new(:rows =>rows, :cols => cols)
+    end
+
+    # grabbed from the 1.9.3 stdlb ShellWords module,
+    # for compatibility with 1.8.7
+    def self.shellescape(str)
+      # An empty argument will be skipped, so return empty quotes.
+      return "''" if str.empty?
+
+      str = str.dup
+
+      # Treat multibyte characters as is.  It is caller's responsibility
+      # to encode the string in the right encoding for the shell
+      # environment.
+      str.gsub!(/([^A-Za-z0-9_\-.,:\/@\n])/, "\\\\\\1")
+
+      # A LF cannot be escaped with a backslash because a backslash + LF
+      # combo is regarded as line continuation and simply ignored.
+      str.gsub!(/\n/, "'\n'")
+
+      return str
+    end
+
+    def self.suppress_output
+      if ENV['GIT_ISSUE_DEBUG'] then
+        yield
+      else
+        begin
+          original_stderr = $stderr.clone
+          original_stdout = $stdout.clone
+          $stderr.reopen(File.new('/dev/null', 'w'))
+          $stdout.reopen(File.new('/dev/null', 'w'))
+          retval = yield
+        rescue Exception => e
+          $stdout.reopen(original_stdout)
+          $stderr.reopen(original_stderr)
+          raise e
+        ensure
+          $stdout.reopen(original_stdout)
+          $stderr.reopen(original_stderr)
+        end
+        retval
+      end
+    end
+  end
+end
+#end of helper.rb
 
 module GitIssue
   class GitWorker
@@ -28,20 +132,6 @@ module GitIssue
     def self.current_sha(branch = "HEAD")
       run("git rev-parse #{branch}")
     end
-
-    def self.top_tree_sha(branch)
-      info = run("git cat-file commit #{branch}")
-      if info =~ /tree\s+([0-9a-fA-F]{40})/ then
-        $1
-      else
-        raise GitError.new("no tree for #{branch}")
-      end
-    end
-
-    def self.dump_tree(tree_sha)
-      run("git ls-tree --full-tree #{tree_sha}").split("\n")
-    end
-
     def self.current_branch
       res = nil
       begin
@@ -63,12 +153,24 @@ module GitIssue
     def self.branch_exists?(branch_name)
       run("git branch --list #{branch_name}") != ""
     end
+    def self.remote_branches(branch_name)
+      run("git branch -r --list */#{branch_name}").split("\n")
+    end
+    def self.create_remote_tracking_branch(remote, branch_name)
+      run("git branch #{branch_name} #{remote}")
+    end
     def self.create_orphan_branch(branch_name)
-      top_level = path_to_top_level
-      raise GitError.new() unless  top_level == "."
-      run("git checkout --orphan #{branch_name}")
-      run("git rm -r -f --ignore-unmatch .")
-      commit("initial commit of #{branch_name}", "--allow-empty")
+      orig_dir = Dir.pwd
+      orig_branch = current_branch
+      Dir.chdir(path_to_top_level)
+      begin
+        run("git checkout --orphan #{branch_name}")
+        run("git rm -r -f --ignore-unmatch .")
+        commit("initial commit of #{branch_name}", "--allow-empty")
+      ensure
+        switch_branch(orig_branch)
+        Dir.chdir(orig_dir)
+      end
     end
     def self.switch_branch(branch_name)
       run("git checkout #{branch_name}")
@@ -189,41 +291,55 @@ module GitIssue
 
     end
     def self.work_on_branch(target_branch, options = {}, &block)
-      orig_branch = current_branch
       orig_dir = Dir.pwd
-      Dir.chdir(path_to_top_level)
+      repo_path = File.expand_path(path_to_top_level)
       begin
-        need_to_stash = (pending_changes?)
-        stash_all if need_to_stash
-        if target_branch == orig_branch then
-          block.call
-        else
-          # first, get to the right branch
+        if target_branch == current_branch then
+          need_to_stash = (pending_changes?)
+          stash_all if need_to_stash
           begin
-            switch_branch(target_branch)
-          rescue GitError
-            if options[:create_orphan] then
-              create_orphan_branch(target_branch)
-            else
-              raise IssueError.new("#{target_branch} does not exist")
+            Dir.chdir(repo_path)
+            block.call(repo_path)
+          ensure
+            unstash if need_to_stash
+          end
+        else
+          continue = false
+          # first, do we have the branch?
+          if not branch_exists?(target_branch) then
+            remotes = remote_branches(target_branch)
+            if remotes.one? then
+              create_remote_tracking_branch(remotes[0], target_branch)
+            elsif remotes.none? then
+              if options[:create_orphan] then
+                create_orphan_branch(target_branch)
+              else
+                raise IssueError.new("#{target_branch} does not exist")
+              end
+            else # more than one
+              raise IssueError.new("multiple remotes for #{target_branch}.  Please check one out and try again.")
             end
           end
-          # now, do the work and get back to the original branch
-          begin
-            block.call
-          ensure
-            switch_branch(orig_branch)
+
+          Dir.mktmpdir do |base_path|
+            Helper.suppress_output do
+              clone_dir = "#{base_path}/tmpclone"
+              run("git clone --single-branch -b #{target_branch} #{repo_path} #{clone_dir}")
+              Dir.chdir(clone_dir)
+              block.call(clone_dir)
+              run("git push origin #{target_branch}")
+            end
           end
         end
       ensure
-        unstash if need_to_stash
         Dir.chdir(orig_dir)
+        @@working_on_branch = false
       end
     end
 
     def self.work_on_issues_branch &block
-      work_on_branch(issues_branch, {:create_orphan => true}) do
-        issues_folder_path = issues_folder
+      work_on_branch(issues_branch, {:create_orphan => true}) do |base_path|
+        issues_folder_path = "#{base_path}/#{issues_folder}"
         FileUtils.mkdir_p(issues_folder_path)
         block.call(issues_folder_path)
       end
@@ -231,89 +347,6 @@ module GitIssue
   end
 end
 #end of git_worker.rb
-
-require 'ostruct'
-module GitIssue
-  class Helper
-    def self.first_non_blank(ary)
-      ary.delete("")
-      ary.delete(nil)
-      ary.first
-    end
-    def self.is_full_sha?(str)
-      !!(str =~ /^[a-fA-F0-9]{40}$/)
-    end
-    def self.is_partial_sha?(str)
-      !!(str =~ /^[a-fA-F0-9]{1,40}$/)
-    end
-    def self.is_tag_spec(tag_str)
-      result = catch :failed do # will be nil if thrown, else true
-        throw :failed if tag_str.nil?
-        split = tag_str.split(":")
-        throw :failed if split.length > 2
-        throw :failed if split[0] !~ /^\w+$/
-        throw :failed if split[1] and split[1] =~ /\s/
-
-        true # only get here if it's legit.
-      end
-      !!result
-    end
-
-    def self.tags_match(tag_ary, obj_tags)
-      tag_ary.all? do |tag_q|
-        if tag_q.value then
-          regx = "^#{tag_q.value.gsub("?", ".{1}").gsub("*", ".*?")}$"
-          obj_tags.any?{|_k, o_t| o_t.key == tag_q.key and
-                              o_t.value =~ /#{regx}/}
-        else
-          obj_tags.any?{|_k, o_t| o_t.key == tag_q.key}
-        end
-      end
-    end
-
-    def self.terminal_size
-      rows, cols = [39, 79]
-      if RUBY_VERSION =~ /2\.\d.\d/ then
-        begin
-          window = [0,0,0,0].pack('SSSS')
-
-          fd = IO.sysopen("/dev/tty", "w")
-          terminal = IO.new(fd, "w")
-
-          terminal.ioctl(1074295912, window)
-
-          rows, cols, _width, _height = window.unpack('SSSS')
-        rescue
-        end
-      elsif ENV['LINES'] and ENV['COLUMNS']
-        rows = ENV['LINES']
-        cols = ENV['COLUMNS']
-      end
-      OpenStruct.new(:rows =>rows, :cols => cols)
-    end
-
-    # grabbed from the 1.9.3 stdlb ShellWords module,
-    # for compatibility with 1.8.7
-    def self.shellescape(str)
-      # An empty argument will be skipped, so return empty quotes.
-      return "''" if str.empty?
-
-      str = str.dup
-
-      # Treat multibyte characters as is.  It is caller's responsibility
-      # to encode the string in the right encoding for the shell
-      # environment.
-      str.gsub!(/([^A-Za-z0-9_\-.,:\/@\n])/, "\\\\\\1")
-
-      # A LF cannot be escaped with a backslash because a backslash + LF
-      # combo is regarded as line continuation and simply ignored.
-      str.gsub!(/\n/, "'\n'")
-
-      return str
-    end
-  end
-end
-#end of helper.rb
 
 require 'tempfile'
 require 'ostruct'
@@ -1547,118 +1580,6 @@ git issue help
   end
 end
 #end of help_command.rb
-
-module GitIssue
-  class Node
-    attr_reader :git_sha
-    attr_reader :name
-    attr_writer :changed
-    attr_writer :path
-    attr_accessor :permissions
-    def changed?
-      @changed ||= false
-    end
-
-    def path
-      @path ||= ""
-    end
-
-    def initialize(sha)
-      @git_sha = sha
-    end
-
-  end
-end
-#end of node.rb
-
-module GitIssue
-  class Blob < Node
-    attr_reader :contents
-    def set_contents
-      @changed = true
-    end
-    def write
-      @git_sha = GitWorker.add_file(self)
-    end
-  end
-end
-#end of blob.rb
-
-module GitIssue
-  class Tree < Node
-    attr_accessor :commit
-    attr_accessor :branch
-    def initialize(sha, path)
-      super
-      @children = []
-      GitWorker.dump_tree(sha).each do |l|
-        child = NodeFactory.parse(l)
-        child.path = self.path << child.path
-        @children << child
-      end
-    end
-
-    def add_child(node, trigger = true)
-      if trigger then
-        @changed = true
-      end
-      @children << node
-    end
-
-    def write
-      children.each do |c|
-        c.write
-      end
-      @git_sha = GitWorker.mk_tree(self)
-    end
-  end
-end
-
-#end of tree.rb
-
-module GitIssue
-  class NodeFactory
-
-    def self.get_tree(branch)
-      raise IssueError.new("no such branch: #{branch}") unless GitWorker.branch_exists?(branch)
-      commit_sha = GitWorker.current_sha(branch)
-      top_tree_sha = GitWorker.top_tree_sha(branch)
-      tree = Tree.new(top_tree_sha, [])
-      tree.commit = commit_sha
-      tree.branch = branch
-
-      tree
-    end
-
-    def self.parse(line)
-      split = line.split(/\s+/)
-      case split[1]
-      when "tree"
-        create_tree(*split)
-      when "blob"
-        create_blob(*split)
-      end
-    end
-
-    def self.commit(branch, tree)
-
-    end
-
-
-    def self.create_tree(permissions, _type, orig_sha, path)
-      tree = Tree.new(orig_sha, path)
-      tree.permissions = permissions
-      tree
-    end
-    def self.create_blob(permissions, _type, orig_sha, path)
-      blob = Blob.new(orig_sha, path)
-      blob.permissions = permissions
-      blob
-    end
-
-  end
-end
-#end of node_factory.rb
 
 
 #end of all.rb

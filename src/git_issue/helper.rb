@@ -78,5 +78,27 @@ module GitIssue
 
       return str
     end
+
+    def self.suppress_output
+      if ENV['GIT_ISSUE_DEBUG'] then
+        yield
+      else
+        begin
+          original_stderr = $stderr.clone
+          original_stdout = $stdout.clone
+          $stderr.reopen(File.new('/dev/null', 'w'))
+          $stdout.reopen(File.new('/dev/null', 'w'))
+          retval = yield
+        rescue Exception => e
+          $stdout.reopen(original_stdout)
+          $stderr.reopen(original_stderr)
+          raise e
+        ensure
+          $stdout.reopen(original_stdout)
+          $stderr.reopen(original_stderr)
+        end
+        retval
+      end
+    end
   end
 end

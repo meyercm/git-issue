@@ -43,5 +43,6 @@ def setup_git_dir
     "git commit --allow-empty -m init",
     "git checkout --orphan publish_branch",
     "git commit --allow-empty -m init",
+    "git checkout master"
   ])
 end

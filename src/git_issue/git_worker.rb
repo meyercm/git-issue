@@ -1,5 +1,5 @@
 require 'fileutils'
-
+require_relative 'helper'
 require_relative 'errors'
 module GitIssue
   class GitWorker
@@ -38,12 +38,24 @@ module GitIssue
     def self.branch_exists?(branch_name)
       run("git branch --list #{branch_name}") != ""
     end
+    def self.remote_branches(branch_name)
+      run("git branch -r --list */#{branch_name}").split("\n")
+    end
+    def self.create_remote_tracking_branch(remote, branch_name)
+      run("git branch #{branch_name} #{remote}")
+    end
     def self.create_orphan_branch(branch_name)
-      top_level = path_to_top_level
-      raise GitError.new() unless  top_level == "."
-      run("git checkout --orphan #{branch_name}")
-      run("git rm -r -f --ignore-unmatch .")
-      commit("initial commit of #{branch_name}", "--allow-empty")
+      orig_dir = Dir.pwd
+      orig_branch = current_branch
+      Dir.chdir(path_to_top_level)
+      begin
+        run("git checkout --orphan #{branch_name}")
+        run("git rm -r -f --ignore-unmatch .")
+        commit("initial commit of #{branch_name}", "--allow-empty")
+      ensure
+        switch_branch(orig_branch)
+        Dir.chdir(orig_dir)
+      end
     end
     def self.switch_branch(branch_name)
       run("git checkout #{branch_name}")
@@ -164,41 +176,55 @@ module GitIssue
 
     end
     def self.work_on_branch(target_branch, options = {}, &block)
-      orig_branch = current_branch
       orig_dir = Dir.pwd
-      Dir.chdir(path_to_top_level)
+      repo_path = File.expand_path(path_to_top_level)
       begin
-        need_to_stash = (pending_changes?)
-        stash_all if need_to_stash
-        if target_branch == orig_branch then
-          block.call
-        else
-          # first, get to the right branch
+        if target_branch == current_branch then
+          need_to_stash = (pending_changes?)
+          stash_all if need_to_stash
           begin
-            switch_branch(target_branch)
-          rescue GitError
-            if options[:create_orphan] then
-              create_orphan_branch(target_branch)
-            else
-              raise IssueError.new("#{target_branch} does not exist")
+            Dir.chdir(repo_path)
+            block.call(repo_path)
+          ensure
+            unstash if need_to_stash
+          end
+        else
+          continue = false
+          # first, do we have the branch?
+          if not branch_exists?(target_branch) then
+            remotes = remote_branches(target_branch)
+            if remotes.one? then
+              create_remote_tracking_branch(remotes[0], target_branch)
+            elsif remotes.none? then
+              if options[:create_orphan] then
+                create_orphan_branch(target_branch)
+              else
+                raise IssueError.new("#{target_branch} does not exist")
+              end
+            else # more than one
+              raise IssueError.new("multiple remotes for #{target_branch}.  Please check one out and try again.")
             end
           end
-          # now, do the work and get back to the original branch
-          begin
-            block.call
-          ensure
-            switch_branch(orig_branch)
+
+          Dir.mktmpdir do |base_path|
+            Helper.suppress_output do
+              clone_dir = "#{base_path}/tmpclone"
+              run("git clone --single-branch -b #{target_branch} #{repo_path} #{clone_dir}")
+              Dir.chdir(clone_dir)
+              block.call(clone_dir)
+              run("git push origin #{target_branch}")
+            end
           end
         end
       ensure
-        unstash if need_to_stash
         Dir.chdir(orig_dir)
+        @@working_on_branch = false
       end
     end
 
     def self.work_on_issues_branch &block
-      work_on_branch(issues_branch, {:create_orphan => true}) do
-        issues_folder_path = issues_folder
+      work_on_branch(issues_branch, {:create_orphan => true}) do |base_path|
+        issues_folder_path = "#{base_path}/#{issues_folder}"
         FileUtils.mkdir_p(issues_folder_path)
         block.call(issues_folder_path)
       end

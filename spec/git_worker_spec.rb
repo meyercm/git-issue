@@ -36,6 +36,7 @@ describe "GitWorker" do
           Dir.chdir(d)
           setup_git_dir
           FileUtils.mkdir_p("#{d}/test_dir")
+          Dir.chdir("#{d}/test_dir")
           File.open("#{d}/test_dir/test.txt", "w") do |f|
             f.write("test_content")
           end
@@ -43,9 +44,9 @@ describe "GitWorker" do
             "git add .",
             "git commit -m 'test'"
           ])
-          GitIssue::GitWorker.work_on_branch("test_branch", :create_orphan => true) do
+          GitIssue::GitWorker.work_on_branch("test_branch", :create_orphan => true) do |path|
             expect(GitIssue::GitWorker.current_branch).to eq("test_branch")
-            expect(File.exists?("#{d}/test_dir/test.txt")).to eq(false)
+            expect(File.exists?("#{path}/test_dir/test.txt")).to eq(false)
           end
           File.open("#{d}/test_dir/test.txt") do |f|
             expect(f.read).to eq("test_content")
@@ -62,12 +63,13 @@ describe "GitWorker" do
           Dir.chdir(d)
           setup_git_dir
           FileUtils.mkdir_p("#{d}/test_dir")
+          Dir.chdir("#{d}/test_dir")
           File.open("#{d}/test_dir/test.txt", "w") do |f|
             f.write("test_content")
           end
-          GitIssue::GitWorker.work_on_branch("master") do
-            expect(GitIssue::GitWorker.current_branch).to eq("master")
-            expect(File.exists?("#{d}/test_dir/test.txt")).to eq(false)
+          GitIssue::GitWorker.work_on_branch("publish_branch") do |path|
+            expect(GitIssue::GitWorker.current_branch).to eq("publish_branch")
+            expect(File.exists?("#{path}/test_dir/test.txt")).to eq(false)
           end
           File.open("#{d}/test_dir/test.txt") do |f|
             expect(f.read).to eq("test_content")
@@ -87,10 +89,11 @@ describe "GitWorker" do
           File.open("#{d}/test_dir/test.txt", "w") do |f|
             f.write("test_content")
           end
-          GitIssue::GitWorker.work_on_branch("test_branch", :create_orphan => true) do
+          GitIssue::GitWorker.work_on_branch("test_branch", :create_orphan => true) do |path|
             expect(GitIssue::GitWorker.current_branch).to eq("test_branch")
-            expect(File.exists?("#{d}/test_dir/test.txt")).to eq(false)
+            expect(File.exists?("#{path}/test_dir/test.txt")).to eq(false)
           end
+          expect(GitIssue::GitWorker.current_branch).to eq("master")
           File.open("#{d}/test_dir/test.txt") do |f|
             expect(f.read).to eq("test_content")
           end
@@ -109,9 +112,9 @@ describe "GitWorker" do
           File.open("#{d}/test_dir/test.txt", "w") do |f|
             f.write("test_content")
           end
-          GitIssue::GitWorker.work_on_branch("publish_branch", :create_orphan => true) do
+          GitIssue::GitWorker.work_on_branch("publish_branch", :create_orphan => true) do |path|
             expect(GitIssue::GitWorker.current_branch).to eq("publish_branch")
-            expect(File.exists?("#{d}/test_dir/test.txt")).to eq(false)
+            expect(File.exists?("#{path}/test_dir/test.txt")).to eq(false)
           end
           File.open("#{d}/test_dir/test.txt") do |f|
             expect(f.read).to eq("test_content")
