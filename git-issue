@@ -1262,7 +1262,7 @@ module GitIssue
 
     def run(options)
       GitWorker.work_on_branch(options.branch) do |base_folder|
-        working_folder = "#{base_folder}#{options.folder}"
+        working_folder = "#{base_folder}/#{options.folder}"
         FileUtils.mkdir_p(working_folder) #this way rm_rf can't complain
         FileUtils.rm_rf(working_folder)
         FileUtils.mkdir_p(working_folder)
