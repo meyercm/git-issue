@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'blind test- just check result codes' do
   it "can run through the general paces" do
-    suppress_output do
+    GitIssue::Helper.suppress_output do
       git_issue = File.expand_path('../../git-issue', __FILE__)
       orig_dir = Dir.pwd
       begin
@@ -28,7 +28,7 @@ describe 'blind test- just check result codes' do
   end
 
   it "can show help" do
-    suppress_output do
+    GitIssue::Helper.suppress_output do
       git_issue = File.expand_path('../../git-issue', __FILE__)
       orig_dir = Dir.pwd
       begin
