@@ -1,0 +1,3 @@
+--- 
+:value: bug
+:key: :kind
