@@ -357,10 +357,17 @@ module GitIssue
   class Tag
     attr_reader :key, :value
     def initialize(hash)
-      @key = hash[:key]
+      @key = atomize(hash[:key])
       @value = hash[:value]
     end
 
+    def atomize(sym_or_str)
+      result = sym_or_str
+      if sym_or_str.is_a? String then
+        result = sym_or_str.to_sym
+      end
+      result
+    end
     def detail_string
       "#{key}:#{value}"
     end

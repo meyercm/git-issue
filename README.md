@@ -48,7 +48,9 @@ Open    deadbeef  Kill more cows!
 - `git issue show` will provide a detailed view of all aspects of an issues's history.
 - `git issue list` is an essential command for querying amongst the existing issues. It includes options for seeing previously closed issues, as well as limiting results based on tags, or searching for particular text in the title or description.
 - Once an issue is complete, it may be closed with `git issue close <issue id>`. Closed issues no longer appear in `git issue list` unless the `--all` option is specified.
+- To re-open an issue, use `git issue tag <issue id> status:open`
 - Alternately, an accidentally created issue may be removed with `git issue delete <issue id>`, although the issue will remain in the repository's history.
+- `git issue publish` is an experimental command that can create a Jeykll page showing your issues ([example based on this repo](http://meyercm.github.io/git-issue/issues))
 - When all else fails, `git issue help` might see you straight.
 
 ##Discussion
