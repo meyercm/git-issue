@@ -1,0 +1,7 @@
+--- 
+:event_type: :set_tag
+:event_id: 183b0c30d84516befade6c639996b85769fc4061
+:title: status
+:text: ":status => \"closed\""
+:creator: anon@anon.org (anon)
+:created_at: 1443274665.25245
