@@ -14,6 +14,24 @@ describe "GitWorker" do
   end
 
   describe "#work_on_branch" do
+    it "creates commits by the current user" do
+      orig_dir = Dir.pwd
+      Dir.mktmpdir do |d|
+        begin
+          Dir.chdir(d)
+          setup_git_dir
+          check_execute(["git branch test_branch"])
+          GitIssue::GitWorker.work_on_branch("test_branch") do
+            check_execute(["git commit -m 'blah' --allow-empty"])
+            author, email = (`git log -1 --pretty="%an|%ae"`).chomp.split("|")
+            expect(author).to eq("blah")
+            expect(email).to eq("blah@blah.blah")
+          end
+        ensure
+          Dir.chdir(orig_dir)
+        end
+      end
+    end
     it "works from the base directory" do
       orig_dir = Dir.pwd
       Dir.mktmpdir do |d|
