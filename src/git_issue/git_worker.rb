@@ -82,7 +82,7 @@ module GitIssue
       config("issue.folder", ".issues")
     end
     def self.default_tag
-      config("issue.default-tag", "kind")
+      config("issue.default-tag", "kind").to_sym
     end
     def self.user_name
       config("user.name", "anon")

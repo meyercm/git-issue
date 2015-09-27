@@ -137,6 +137,7 @@ module GitIssue
         if split[0] == "events" then
           new_obj.events << Event.new(piece)
         elsif split[0] == "tags" then
+          piece[:key] = piece[:key].to_sym
           new_obj.tags[piece[:key]] = Tag.new(piece)
         end
       end
