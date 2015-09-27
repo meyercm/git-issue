@@ -5,7 +5,7 @@ layout: default
 
 ## \#85ecd5ea: attempt to clone to /tmp for write operations
 
-###Status: **Open**
+###Status: **Closed**
 _created by meyer.cm@gmail.com (Chris Meyer) at 2015-09-05 13:01:34 -0400_
 
 Currently, we are switching branches in the actual repo in use- instead,

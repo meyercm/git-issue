@@ -5,7 +5,7 @@ layout: default
 
 ## \#4e2266b6: occasionally get wierd 'working dir' errors
 
-###Status: **Open**
+###Status: **Closed**
 _created by meyer.cm@gmail.com (Chris Meyer) at 2015-09-10 21:20:04 -0400_
 
 seems to be happening from subdirectories, but it didn't happen in the manual

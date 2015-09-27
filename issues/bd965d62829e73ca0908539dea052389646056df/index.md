@@ -5,7 +5,7 @@ layout: default
 
 ## \#bd965d62: add a reasonable way to re-open an issue
 
-###Status: **Open**
+###Status: **Closed**
 _created by meyer.cm@gmail.com (Chris Meyer) at 2015-09-06 15:48:01 -0400_
 
 

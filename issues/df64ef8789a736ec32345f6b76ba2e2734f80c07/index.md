@@ -5,7 +5,7 @@ layout: default
 
 ## \#df64ef87: crash in issue list from single-branch clone
 
-###Status: **Open**
+###Status: **Closed**
 _created by meyer.cm@gmail.com (Chris Meyer) at 2015-09-23 13:23:29 -0400_
 
 cloned a large repo, with the single branch option.  then ran git-issue list

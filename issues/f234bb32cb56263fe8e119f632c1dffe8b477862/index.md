@@ -5,7 +5,7 @@ layout: default
 
 ## \#f234bb32: need to convert tags into atoms
 
-###Status: **Open**
+###Status: **Closed**
 _created by meyer.cm@gmail.com (Chris Meyer) at 2015-09-23 14:26:30 -0400_
 
 tag keys that come from the command line (e.g. git issue new bug, or
