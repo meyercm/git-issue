@@ -1,3 +1,3 @@
 --- 
-:value: open
+:value: closed
 :key: :status
