@@ -1,0 +1,3 @@
+---
+:key: :kind
+:value: feature
