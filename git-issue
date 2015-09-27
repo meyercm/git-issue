@@ -1274,19 +1274,19 @@ module GitIssue
     end
 
     def run(options)
+      issues = Issue.all.sort_by{|i| i.created_at}.reverse
       GitWorker.work_on_branch(options.branch) do |base_folder|
         working_folder = "#{base_folder}/#{options.folder}"
         FileUtils.mkdir_p(working_folder) #this way rm_rf can't complain
         FileUtils.rm_rf(working_folder)
         FileUtils.mkdir_p(working_folder)
-        create_page(working_folder)
+        create_page(working_folder, issues)
         GitWorker.add(working_folder)
         GitWorker.commit("git-issue publish issues")
       end
     end
 
-    def create_page(working_folder)
-      issues = Issue.all.sort_by{|i| i.created_at}.reverse
+    def create_page(working_folder, issues)
       write_index("#{working_folder}/index.html", issues)
       issues.each do |i|
         write_issue(working_folder, i)
