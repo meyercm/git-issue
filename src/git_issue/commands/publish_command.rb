@@ -106,9 +106,7 @@ _created by #{issue.creator} at #{Time.at(issue.created_at)}_
         f.write(text)
       end
     end
-
-  end
-  @@help_message ="\
+    @@help_message ="\
 Publishes all issues to the specified branch for use with Jekyll.
 
 Usage:   git issue publish [options]
@@ -122,4 +120,5 @@ Options:
 Examples:
   git issue publish
 "
+  end
 end

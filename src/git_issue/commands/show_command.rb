@@ -46,8 +46,7 @@ module GitIssue
       end
       output.join("\n")
     end
-  end
-  @@help_message ="\
+    @@help_message ="\
 Shows the full detail of an issue, including all tags, comments and events.
 Can also be used to show the current git-issue configuration.
 
@@ -61,4 +60,5 @@ Options:
 Examples:
   git issue show cc4
 "
+  end
 end

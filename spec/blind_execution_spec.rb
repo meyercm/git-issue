@@ -39,13 +39,16 @@ describe 'blind test- just check result codes' do
           setup_git_dir
           check_execute([
             "#{git_issue} help",
-            "#{git_issue} help list",
-            "#{git_issue} help show",
-            "#{git_issue} help new",
+            "#{git_issue} help close",
+            "#{git_issue} help comment",
+            "#{git_issue} help delete",
             "#{git_issue} help edit",
-            "#{git_issue} help tag",
+            "#{git_issue} help list",
+            "#{git_issue} help new",
             "#{git_issue} help publish",
-            "#{git_issue} help delete"])
+            "#{git_issue} help show",
+            "#{git_issue} help tag",
+            ])
         end
       ensure
         Dir.chdir(orig_dir)
