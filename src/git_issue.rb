@@ -1,7 +1,7 @@
 require_relative 'git_issue/all'
 
 module GitIssue
-  @@version = "0.0.2"
+  @@version = "0.0.3"
   def self.parse_and_run(args)
     result = 1 # pessimistic- assume the script will fail somewhere
     begin

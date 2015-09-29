@@ -14,6 +14,7 @@ describe 'blind test- just check result codes' do
 
           issue_id = GitIssue::Issue.all.first.issue_id
           check_execute([
+            "#{git_issue} list",
             "#{git_issue} list bug",
             "#{git_issue} show #{issue_id}",
             "#{git_issue} tag #{issue_id} blah:bleh",
@@ -36,11 +37,22 @@ describe 'blind test- just check result codes' do
 
           Dir.chdir(d)
           setup_git_dir
-          check_execute(["#{git_issue} help list"])
+          check_execute([
+            "#{git_issue} help",
+            "#{git_issue} help list",
+            "#{git_issue} help show",
+            "#{git_issue} help new",
+            "#{git_issue} help edit",
+            "#{git_issue} help tag",
+            "#{git_issue} help publish",
+            "#{git_issue} help delete"])
         end
       ensure
         Dir.chdir(orig_dir)
       end
     end
   end
+
+
+
 end

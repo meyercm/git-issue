@@ -190,7 +190,7 @@ module GitIssue
             unstash if need_to_stash
           end
         else
-          continue = false
+          create = false
           # first, do we have the branch?
           if not branch_exists?(target_branch) then
             remotes = remote_branches(target_branch)
@@ -198,7 +198,7 @@ module GitIssue
               create_remote_tracking_branch(remotes[0], target_branch)
             elsif remotes.none? then
               if options[:create_orphan] then
-                create_orphan_branch(target_branch)
+                create = true
               else
                 raise IssueError.new("#{target_branch} does not exist")
               end
@@ -212,10 +212,18 @@ module GitIssue
             u_email = user_email
             Helper.suppress_output do
               clone_dir = "#{base_path}/tmpclone"
-              run("git clone --single-branch -b #{target_branch} #{repo_path} #{clone_dir}")
+              if create then
+                run("git clone #{repo_path} #{clone_dir}")
+              else
+                run("git clone --single-branch -b #{target_branch} #{repo_path} #{clone_dir}")
+              end
               Dir.chdir(clone_dir)
               run("git config user.name #{u_name}")
               run("git config user.email #{u_email}")
+              if create then
+                create_orphan_branch(target_branch)
+                switch_branch(target_branch)
+              end
               block.call(clone_dir)
               run("git push origin #{target_branch}")
             end
@@ -223,7 +231,6 @@ module GitIssue
         end
       ensure
         Dir.chdir(orig_dir)
-        @@working_on_branch = false
       end
     end
 
