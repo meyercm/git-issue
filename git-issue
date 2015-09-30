@@ -258,15 +258,14 @@ module GitIssue
     def self.merge_issues_with_upstream
       ib = issues_branch
       rb = config("branch.#{ib}.remote", :stop!)
-
       if rb != :stop! then
 
         rb += "/#{ib}"
         if current_sha(ib) != current_sha(rb) then
           if run("git rev-list --count #{ib}..#{rb}").to_i > 0 then
-            work_on_issues_branch do
+            work_on_issues_branch! do
               begin
-                run "git pull --no-edit"
+                run "git merge --no-edit #{rb}"
                 puts "updated issues branch"
               rescue GitError
                 run "git merge --abort", :raise => false
@@ -349,8 +348,51 @@ module GitIssue
       end
     end
 
+
+    def self.work_on_branch!(target_branch, options = {}, &block)
+      orig_branch = current_branch
+      orig_dir = Dir.pwd
+      Dir.chdir(path_to_top_level)
+      begin
+        need_to_stash = (pending_changes?)
+        stash_all if need_to_stash
+        if target_branch == orig_branch then
+          block.call(Dir.pwd)
+        else
+          # first, get to the right branch
+          begin
+            switch_branch(target_branch)
+          rescue GitError
+            if options[:create_orphan] then
+              create_orphan_branch(target_branch)
+            else
+              raise IssueError.new("#{target_branch} does not exist")
+            end
+          end
+          # now, do the work and get back to the original branch
+          begin
+            block.call(Dir.pwd)
+          ensure
+            switch_branch(orig_branch)
+          end
+        end
+      ensure
+        unstash if need_to_stash
+        Dir.chdir(orig_dir)
+      end
+    end
+
+
     def self.work_on_issues_branch &block
       work_on_branch(issues_branch, {:create_orphan => true}) do |base_path|
+        issues_folder_path = "#{base_path}/#{issues_folder}"
+        FileUtils.mkdir_p(issues_folder_path)
+        block.call(issues_folder_path)
+      end
+    end
+
+    def self.work_on_issues_branch! &block
+      work_on_branch!(issues_branch, {:create_orphan => true}) do |base_path|
         issues_folder_path = "#{base_path}/#{issues_folder}"
         FileUtils.mkdir_p(issues_folder_path)
         block.call(issues_folder_path)
